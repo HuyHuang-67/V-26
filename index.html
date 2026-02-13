@@ -735,10 +735,26 @@
     initLixis();
     document.getElementById('luckyOverlay').classList.add('show');
     
-    // Phát nhạc
     const music = document.getElementById('luckyMusic');
-    music.currentTime = 0; // Reset về đầu
+    music.currentTime = 0;
+    music.volume = 0;
     music.play().catch(err => console.log('Âm thanh:', err));
+    
+    // Fade in trong 5 giây (5000ms)
+    const fadeDuration = 5000;
+    const startTime = Date.now();
+    
+    function fadeIn() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / fadeDuration, 1); // 0 -> 1
+        music.volume = progress;
+        
+        if (progress < 1) {
+            requestAnimationFrame(fadeIn);
+        }
+    }
+    
+    fadeIn();
 }
 
         function closeFortune() {
@@ -831,4 +847,5 @@
         window.closePrizeModal = closePrizeModal;
     </script>
 </body>
+
 </html>
