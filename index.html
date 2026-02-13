@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tìm mèo péo</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #90EE90 50%, #8B7355 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 760px;
+            border-radius: 18px;
+            padding: 24px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c6e2b3 100%);
+            border: 5px solid #8B5A2B;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        h1 {
+            text-align: center;
+            color: #5C4033;
+            margin-bottom: 12px;
+            font-size: 2.2rem;
+        }
+
+        .info-panel {
+            display: flex;
+            gap: 16px;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .info-box {
+            flex: 1;
+            background: linear-gradient(135deg, #8B7355 0%, #654321 100%);
+            padding: 12px;
+            border-radius: 10px;
+            color: #FFFACD;
+            text-align: center;
+            border: 3px solid #5C4033;
+        }
+
+        .info-box label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .info-box .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .countdown-display {
+            display: none;
+            text-align: center;
+            font-size: 3.6rem;
+            color: #5C4033;
+            margin: 12px 0;
+        }
+
+        .countdown-display.show {
+            display: block;
+            animation: pop 1s ease-in-out infinite;
+        }
+
+        @keyframes pop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 26px;
+            border-radius: 10px;
+            border: 3px solid #5C4033;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6B8E23, #556B2F);
+            color: #FFFACD;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        .moles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            padding: 18px;
+            background: rgba(139, 115, 85, 0.12);
+            border-radius: 12px;
+        }
+
+        .mole-hole {
+            aspect-ratio: 1;
+            background-image: url('img3.jpg');
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            border: 5px solid #5C4033;
+            overflow: hidden;
+            box-shadow: inset 0 6px 14px rgba(0, 0, 0, 0.35);
+        }
+
+        .mole {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: none;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .mole.active {
+            display: flex;
+            background-image: url('img2.gif');
+            animation: popUp 0.3s ease;
+        }
+
+        .mole.hit {
+            background-image: url('img1.gif');
+            animation: hitAnimation 0.3s ease;
+        }
+
+        @keyframes popUp {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes hitAnimation {
+            0% { transform: scale(1); }
+            25% { transform: scale(0.95); }
+            50% { transform: scale(0.8); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .end-screen {
+            display: none;
+            margin-top: 14px;
+            padding: 22px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #8B7355 0%, #654321 100%);
+            color: #FFFACD;
+            border: 5px solid #5C4033;
+            text-align: center;
+        }
+
+        .end-screen.show {
+            display: block;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .end-image {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 4px solid #FFFACD;
+            margin: 12px auto;
+            animation: wobble 2s ease-in-out infinite;
+        }
+
+        @keyframes wobble {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-2deg) scale(1.02); }
+            50% { transform: rotate(2deg); }
+            75% { transform: rotate(-1deg); }
+        }
+
+        .final-score {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-top: 8px;
+        }
+
+        .end-message {
+            margin: 10px 0;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        #fortuneBtn {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            color: #fff;
+            border: 3px solid #7f0000;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Lucky Screen */
+        .lucky-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .lucky-overlay.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        /* Thêm vào trong <style> */
+#luckyMusic {
+    display: none;
+}
+        .lucky-screen {
+            width: 90%;
+            max-width: 500px;
+            background: linear-gradient(180deg, #ffefef 0%, #ffe0b2 100%);
+            border: 8px solid #b71c1c;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .lucky-header {
+            color: #7f0000;
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+            font-weight: 800;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .lixis-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .lixi {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #c62828, #b71c1c);
+            border: 4px solid #7f0000;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: #fff;
+            font-weight: 900;
+            font-size: 0.9rem;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .lixi:hover:not(.opened) {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+        }
+
+        .lixi.opened {
+            background: linear-gradient(135deg, #ffd54f, #ffb300);
+            color: #7f0000;
+            cursor: default;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .lixi .label {
+            pointer-events: none;
+            text-align: center;
+        }
+
+        /* Prize display modal */
+        .prize-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .prize-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .prize-content {
+            background: linear-gradient(135deg, #fff9c4, #ffeb3b);
+            border: 8px solid #f57f17;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+            animation: prizeScale 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes prizeScale {
+            0% {
+                transform: scale(0.3) rotateX(90deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotateX(0deg);
+                opacity: 1;
+            }
+        }
+
+        .prize-text {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #f57f17;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
+            margin: 20px 0;
+        }
+
+        .prize-label {
+            font-size: 1.2rem;
+            color: #5f0000;
+            font-weight: 700;
+        }
+
+        .lucky-footer {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 600px) {
+            .lixis-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .lixi {
+                font-size: 0.8rem;
+            }
+
+            .prize-text {
+                font-size: 2.5rem;
+            }
+
+            .lucky-screen {
+                width: 95%;
+                padding: 16px;
+            }
+        }
+        /* Thêm vào trong <style> */
+.prizes-tracker {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #fff9c4 0%, #ffeb3b 100%);
+    border: 3px solid #f57f17;
+    border-radius: 12px;
+    padding: 12px;
+    max-width: 200px;
+    max-height: 500px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    z-index: 500;
+    display: none;
+}
+
+.prizes-tracker.show {
+    display: block;
+}
+
+.prizes-header {
+    font-weight: 800;
+    color: #f57f17;
+    margin-bottom: 8px;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.prize-item {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px;
+    margin: 6px 0;
+    border-radius: 8px;
+    border-left: 4px solid #f57f17;
+    font-size: 0.9rem;
+    color: #5f0000;
+    font-weight: 700;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .prizes-tracker {
+        top: 10px;
+        right: 10px;
+        max-width: 150px;
+        max-height: 400px;
+        padding: 8px;
+    }
+
+    .prize-item {
+        font-size: 0.8rem;
+        padding: 6px;
+        margin: 4px 0;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- Thêm vào sau <body> tag, trước <div class="container"> -->
+<div class="prizes-tracker" id="prizesTracker">
+    <div class="prizes-header">📋 Phần thưởng nhận</div>
+    <div class="prizes-list" id="prizesList"></div>
+</div>
+    <div class="container" id="mainContainer">
+        <h1>Mèo péo :3</h1>
+
+        <div class="info-panel">
+            <div class="info-box">
+                <label>Điểm</label>
+                <div class="value" id="score">0</div>
+            </div>
+            <div class="info-box">
+                <label>Lần còn lại</label>
+                <div class="value" id="remains">10</div>
+            </div>
+        </div>
+
+        <div class="countdown-display" id="countdownDisplay">3</div>
+
+        <div class="button-group">
+            <button id="startBtn" onclick="startGame()">🎮 Bắt Đầu</button>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="moles-grid" id="molesGrid">
+                <div class="mole-hole" onclick="hitMole(event)"><div class="mole" id="mole-0"></div></div>
+                <div class="mole-hole" onclick="hitMole(event)"><div class="mole" id="mole-1"></div></div>
+                <div class="mole-hole" onclick="hitMole(event)"><div class="mole" id="mole-2"></div></div>
+                <div class="mole-hole" onclick="hitMole(event)"><div class="mole" id="mole-3"></div></div>
+                <div class="mole-hole" onclick="hitMole(event)"><div class="mole" id="mole-4"></div></div>
+                <div class="mole-hole" onclick="hitMole(event)"><div class="mole" id="mole-5"></div></div>
+                <div class="mole-hole" onclick="hitMole(event)"><div class="mole" id="mole-6"></div></div>
+                <div class="mole-hole" onclick="hitMole(event)"><div class="mole" id="mole-7"></div></div>
+                <div class="mole-hole" onclick="hitMole(event)"><div class="mole" id="mole-8"></div></div>
+            </div>
+        </div>
+
+        <div class="end-screen" id="endScreen">
+            <h2>🎉 Trò Chơi Kết Thúc! 🎉</h2>
+            <img id="endImage" src="" alt="End" class="end-image" />
+            <div class="final-score" id="finalScore">0</div>
+            <div class="end-message" id="endMessage"></div>
+            <div style="margin-top: 12px;">
+                <button id="fortuneBtn" class="hidden" onclick="openFortune()">🎁 Vận may liền tay</button>
+                <button id="playAgainMain" onclick="resetToStart()">🔄 Chơi Lại</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lucky Screen -->
+     <!-- Thêm vào trong <body>, trước hoặc sau lucky-overlay -->
+<audio id="luckyMusic" loop>
+    <source src="Simp Gái 808.mp3" type="audio/mpeg">
+</audio>
+    <div class="lucky-overlay" id="luckyOverlay">
+        <div class="lucky-screen" id="luckyScreen">
+            <div class="lucky-header">🎁 Mở Lì Xì May Mắn 🎁</div>
+            <div class="lixis-grid" id="lixisGrid"></div>
+            <div class="lucky-footer">
+                <button id="playAgainFromLucky" onclick="resetToStart()" class="hidden">🔄 Chơi Lại</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prize Display Modal -->
+    <div class="prize-modal" id="prizeModal">
+        <div class="prize-content">
+            <div class="prize-label">🎉 Phần Thưởng 🎉</div>
+            <div class="prize-text" id="prizeText">200.000 đ</div>
+            <button onclick="closePrizeModal()" style="margin-top: 20px;">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            score: 0,
+            remains: 10,
+            gameActive: false,
+            currentMole: null,
+            moleTimeout: null
+        };
+
+        const TOTAL_HITS = 10;
+        const MOLE_VISIBLE_MS = 800;
+
+        // End messages
+        const endMessages = {
+            0: { message: 'Số không tròn xoe như hoa cúc,Nằm im cười khúc khích: “Tớ có cc”', sound: 'sound1.mp3', image: 'image1.jpg' },
+            1: { message: '1 bó hoa', sound: 'sound2.mp3', image: 'image2.jpg' },
+            2: { message: '2 mèo péo', sound: 'sound3.mp3', image: 'image3.jpg' },
+            3: { message: 'thịt 3 chỉ', sound: 'sound4.mp3', image: 'image4.jpg' },
+            4: { message: 'Bánh chưng 4 mùa', sound: 'sound5.mp3', image: 'image5.jpg' },
+            5: { message: '5 ngày péo', sound: 'sound6.mp3', image: 'image6.jpg' },
+            6: { message: '6677 ', sound: 'sound7.mp3', image: 'image7.jpg' },
+            7: { message: '7 tốt 7 bập bênh', sound: 'sound8.mp3', image: 'image8.jpg' },
+            8: { message: '8 ngang péo', sound: 'sound9.mp3', image: 'image9.jpg' },
+            9: { message: '9 9 9 bông hoa hồng', sound: 'sound10.mp3', image: 'image10.jpg' },
+            10: { message: 'TUYỆT cà là VỜI! ĐẬP HẾT TẤT CẢ 10 CON!\nHãy nhận phần thưởng hỡi vua đập chuột 👑', sound: 'sound11.mp3', image: 'image11.jpg' }
+        };
+
+        const PRIZES = [
+            '200.000 đ',
+            '500.000 đ',
+            '888.000 đ',
+            '999.000 đ',
+            '520.000 đ',
+            'Ăn dokki',
+            'Mua quần áo nhót',
+            'Bánh kẹo suốt đời'
+        ];
+
+        // Utilities
+        function randDelayMs(min = 1000, max = 2000) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        // Game Functions
+        function startGame() {
+            gameState.score = 0;
+            gameState.remains = TOTAL_HITS;
+            updateScore();
+            updateRemains();
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('endScreen').classList.remove('show');
+            document.getElementById('gameArea').classList.add('active');
+            
+            document.querySelectorAll('.mole').forEach(m => {
+                m.classList.remove('active', 'hit');
+            });
+
+            countdown(3);
+        }
+
+        function countdown(sec) {
+            const el = document.getElementById('countdownDisplay');
+            el.classList.add('show');
+            el.textContent = sec;
+
+            if (sec > 0) {
+                setTimeout(() => countdown(sec - 1), 1000);
+            } else {
+                el.classList.remove('show');
+                setTimeout(() => {
+                    gameState.gameActive = true;
+                    showMole();
+                }, randDelayMs());
+            }
+        }
+
+        function showMole() {
+            if (!gameState.gameActive) return;
+
+            if (gameState.currentMole) {
+                gameState.currentMole.classList.remove('active');
+                gameState.currentMole = null;
+            }
+
+            const idx = Math.floor(Math.random() * 9);
+            const mole = document.getElementById('mole-' + idx);
+            gameState.currentMole = mole;
+            mole.classList.add('active');
+
+            clearTimeout(gameState.moleTimeout);
+            gameState.moleTimeout = setTimeout(() => {
+                if (gameState.currentMole) {
+                    gameState.currentMole.classList.remove('active');
+                    gameState.remains--;
+                    updateRemains();
+
+                    if (gameState.remains > 0) {
+                        setTimeout(showMole, randDelayMs());
+                    } else {
+                        endGame();
+                    }
+                }
+            }, MOLE_VISIBLE_MS);
+        }
+
+        function hitMole(event) {
+            if (!gameState.gameActive) return;
+
+            const mole = event.currentTarget.querySelector('.mole');
+
+            // Only count if mole is active (hit correct target)
+            if (!mole || !mole.classList.contains('active')) {
+                return; // Miss - no penalty
+            }
+
+            // Hit success
+            mole.classList.add('hit');
+            gameState.score++;
+            gameState.remains--;
+
+            updateScore();
+            updateRemains();
+
+            clearTimeout(gameState.moleTimeout);
+
+            setTimeout(() => {
+                mole.classList.remove('active', 'hit');
+
+                if (gameState.remains > 0) {
+                    setTimeout(showMole, randDelayMs());
+                } else {
+                    endGame();
+                }
+            }, 300);
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = gameState.score;
+        }
+
+        function updateRemains() {
+            document.getElementById('remains').textContent = gameState.remains;
+        }
+
+        function endGame() {
+            gameState.gameActive = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('gameArea').classList.remove('active');
+
+            const data = endMessages[gameState.score];
+            document.getElementById('endImage').src = data.image || '';
+            document.getElementById('finalScore').textContent = gameState.score + '/' + TOTAL_HITS;
+            document.getElementById('endMessage').textContent = data.message;
+            document.getElementById('endScreen').classList.add('show');
+
+            // Show fortune button only for 10 points
+            document.getElementById('fortuneBtn').classList.toggle('hidden', gameState.score !== TOTAL_HITS);
+
+            if (data.sound) {
+                const a = new Audio(data.sound);
+                a.play().catch(() => {});
+            }
+        }
+
+        function resetToStart() {
+            closeFortune();
+            document.getElementById('endScreen').classList.remove('show');
+            document.getElementById('startBtn').disabled = false;
+            updateScore();
+            updateRemains();
+        }
+
+        // Lucky Functions
+        let luckyState = {
+            prizesAssigned: [],
+            openedCount: 0
+        };
+
+        function openFortune() {
+    initLixis();
+    document.getElementById('luckyOverlay').classList.add('show');
+    
+    // Phát nhạc
+    const music = document.getElementById('luckyMusic');
+    music.currentTime = 0; // Reset về đầu
+    music.play().catch(err => console.log('Âm thanh:', err));
+}
+
+        function closeFortune() {
+    document.getElementById('luckyOverlay').classList.remove('show');
+    document.getElementById('prizesTracker').classList.remove('show');
+    document.getElementById('prizesList').innerHTML = '';
+    
+    // Dừng nhạc
+    const music = document.getElementById('luckyMusic');
+    music.pause();
+    music.currentTime = 0;
+    
+    luckyState = { prizesAssigned: [], openedCount: 0 };
+}
+
+        function initLixis() {
+            luckyState.openedCount = 0;
+            const arr = PRIZES.slice();
+            shuffleArray(arr);
+            luckyState.prizesAssigned = arr;
+
+            const grid = document.getElementById('lixisGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 8; i++) {
+                const div = document.createElement('div');
+                div.className = 'lixi';
+                div.dataset.index = i;
+                div.innerHTML = `<div class="label">Lì xì \nhảo hảo</div>`;
+                div.addEventListener('click', () => openLixi(i));
+                grid.appendChild(div);
+            }
+
+            document.getElementById('playAgainFromLucky').classList.add('hidden');
+        }
+        function addPrizeToTracker(prize) {
+    const tracker = document.getElementById('prizesTracker');
+    const list = document.getElementById('prizesList');
+    
+    // Hiển thị tracker
+    tracker.classList.add('show');
+    
+    // Tạo element phần thưởng
+    const item = document.createElement('div');
+    item.className = 'prize-item';
+    item.textContent = prize;
+    item.style.animation = 'slideInRight 0.4s ease';
+    
+    list.appendChild(item);
+}
+
+        
+        function openLixi(idx) {
+    const lixi = document.querySelector(`.lixi[data-index="${idx}"]`);
+    if (lixi.classList.contains('opened')) return;
+
+    const prize = luckyState.prizesAssigned[idx];
+    lixi.classList.add('opened');
+    luckyState.openedCount++;
+
+    // Thêm phần thưởng vào tracker
+    addPrizeToTracker(prize);
+
+    // Show prize modal
+    showPrizeModal(prize);
+
+    // Check if all opened
+    if (luckyState.openedCount >= 8) {
+        setTimeout(() => {
+            document.getElementById('playAgainFromLucky').classList.remove('hidden');
+        }, 800);
+    }
+}
+
+        function showPrizeModal(prize) {
+            document.getElementById('prizeText').textContent = prize;
+            document.getElementById('prizeModal').classList.add('show');
+        }
+
+        function closePrizeModal() {
+            document.getElementById('prizeModal').classList.remove('show');
+        }
+
+        // Expose globals
+        window.startGame = startGame;
+        window.hitMole = hitMole;
+        window.resetToStart = resetToStart;
+        window.openFortune = openFortune;
+        window.closeFortune = closeFortune;
+        window.closePrizeModal = closePrizeModal;
+    </script>
+</body>
+</html>
